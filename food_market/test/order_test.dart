@@ -6,14 +6,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:food_market/helpers/routes.dart';
 import 'package:food_market/helpers/theme.dart';
 import 'package:food_market/l10n/l10n.dart';
-import 'package:food_market/pages/Sign_in/sign_in_with_email_page.dart';
+import 'package:food_market/main.dart';
 import 'package:food_market/pages/home/home_page.dart';
-import 'package:food_market/pages/profile/profile_page.dart';
 import 'package:food_market/providers/locale_provider.dart';
 import 'package:food_market/providers/theme_provider.dart';
-import 'package:get/get_navigation/src/root/get_material_app.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:provider/provider.dart';
 import 'package:screenshot/screenshot.dart';
@@ -30,141 +29,19 @@ void main() {
 
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  test('Calculation', () {
-    expect(1 + 1, 2);
-    expect(1 + 1 + 1, 3);
-    expect(1 + 1 + 1 + 1, 4);
-    expect(1 + 1 + 1 + 1 + 1, 5);
-  });
-
-  test('Wording', () {
-    expect('a', 'a');
-    expect('b', 'b');
-    expect('c', 'c');
-    expect('d', 'd');
-  });
-
-  testWidgets('HomePage does load', (WidgetTester tester) async {
-    
-    await tester.pumpWidget(
-      MultiProvider(
-        providers: [
-          ChangeNotifierProvider(create: (context) => ThemeProvider()),
-          ChangeNotifierProvider(create: (context) => LocaleProvider()),
-        ],
-        child: Consumer2<ThemeProvider, LocaleProvider>(
-          builder: (context, theme, locale, child) {
-            return MaterialApp(
-              title: 'Food Market',
-              debugShowCheckedModeBanner: false,
-              theme: themeLight(context),
-              darkTheme: themeDark(context),
-              themeMode: (theme.isDarkTheme == false) 
-                        ? ThemeMode.light
-                        : ThemeMode.dark,
-              locale: locale.locale,
-              localizationsDelegates: const [
-                AppLocalizations.delegate,
-                GlobalMaterialLocalizations.delegate,
-                GlobalWidgetsLocalizations.delegate,
-                GlobalCupertinoLocalizations.delegate,
-              ],
-              supportedLocales: L10n.all,
-              home: const Scaffold(
-                body: HomePage(),
-              ),
-            );
-          },
-        ),
-      ),
-    );
-
-    await tester.pumpAndSettle();
-
-    // Validate the page to ensure it is the home page.
-    expect(find.textContaining("Let's Find\nSomething Delicious!"), findsOneWidget);
-  });
-
   testWidgets('HomePage can scroll (and take screenshots)', (WidgetTester tester) async {
 
     final ScreenshotController screenshotController = ScreenshotController();
 
-    tester.view.physicalSize = screenSize;
+    // tester.view.physicalSize = screenSize;
     
-    // runApp(
-    //   MaterialApp(
-    //     home: MultiProvider(
-    //       providers: [
-    //         ChangeNotifierProvider(create: (context) => ThemeProvider()),
-    //         ChangeNotifierProvider(create: (context) => LocaleProvider()),
-    //       ],
-    //       child: Consumer2<ThemeProvider, LocaleProvider>(
-    //         builder: (context, theme, locale, child) {
-    //           return MaterialApp(
-    //             title: 'Food Market',
-    //             debugShowCheckedModeBanner: false,
-    //             theme: themeLight(context),
-    //             darkTheme: themeDark(context),
-    //             themeMode: (theme.isDarkTheme == false) 
-    //                       ? ThemeMode.light
-    //                       : ThemeMode.dark,
-    //             locale: locale.locale,
-    //             localizationsDelegates: const [
-    //               AppLocalizations.delegate,
-    //               GlobalMaterialLocalizations.delegate,
-    //               GlobalWidgetsLocalizations.delegate,
-    //               GlobalCupertinoLocalizations.delegate,
-    //             ],
-    //             supportedLocales: L10n.all,
-    //             home: const Scaffold(
-    //               body: HomePage(),
-    //             ),
-    //           );
-    //         },
-    //       ),
-    //     ),
-    //   ),
-    // );
-
-    await tester.pumpWidget(
-      Screenshot(
-        controller: screenshotController,
-        child: MultiProvider(
-          providers: [
-            ChangeNotifierProvider(create: (context) => ThemeProvider()),
-            ChangeNotifierProvider(create: (context) => LocaleProvider()),
-          ],
-          child: Consumer2<ThemeProvider, LocaleProvider>(
-            builder: (context, theme, locale, child) {
-              return GetMaterialApp(
-                title: 'Food Market',
-                debugShowCheckedModeBanner: false,
-                theme: themeLight(context),
-                darkTheme: themeDark(context),
-                themeMode: (theme.isDarkTheme == false) 
-                          ? ThemeMode.light
-                          : ThemeMode.dark,
-                locale: locale.locale,
-                localizationsDelegates: const [
-                  AppLocalizations.delegate,
-                  GlobalMaterialLocalizations.delegate,
-                  GlobalWidgetsLocalizations.delegate,
-                  GlobalCupertinoLocalizations.delegate,
-                ],
-                supportedLocales: L10n.all,
-                home: const Scaffold(
-                  body: HomePage(),
-                  // body: SignInWithEmailPage(),
-                  // body: ProfilePage(),
-                ),
-              );
-            },
-          ),
-        ),
+    runApp(
+      const MyApp(
+        home: Routes.home,
       ),
     );
 
-    await tester.pumpAndSettle();
+    await tester.pumpAndSettle(const Duration(seconds: 7));
 
     num currentNo = 0;
 
@@ -172,7 +49,7 @@ void main() {
     
     print('currentNo: $currentNo');
 
-    await delayed(milliseconds: 15000);
+    await delayed(milliseconds: 5000);
   });
 }
 
@@ -208,6 +85,8 @@ Future<num> scrollEachItem(
   else {
     print('scrollableElements is not empty, proceed');
 
+    print('scrollableElements.length: ${scrollableElements.length}');
+
     // Otherwise, start screenshoting.
     // The following tasks should be done:
     // 1. If no element exists in the current viewport, take screenshot and then scroll down.
@@ -226,29 +105,24 @@ Future<num> scrollEachItem(
         tester.firstWidget<Widget>(scrollableFinder);
         print('Element found. Proceed.');
 
-        final screenSize = tester.getSize(find.byWidget(scrollable));
+        final screenSize = tester.getSize(scrollableFinder);
 
         print('Checkpoint 1');
 
-        // final scrollableSize = screenSize.height;
-        const scrollableSize = 100.0;
+        print('scrollableFinder: $scrollableFinder');
+
+        print('screenSize: $screenSize');
+
+        final scrollableSize = screenSize.height;
+        // const scrollableSize = 100.0;
 
         print('Checkpoint 2');
 
-        /*
-          25 Apr: Confirmed that home page cannot scroll down, but scroll all other directions can work normally.
-          26 Apr: Confirmed that both sign in page and profile page can scroll down. So it is a page-relevant problem.
-        */
-
-        // Vertical upwards works
-        // Vertical downwards doesn't work, shows white screen
-        // Horizontal both direction works
         // final offset = Offset(0.0, scrollableSize); // (Works) Vertical downwards dragging, moving upwards
-        final offset = Offset(0.0, -scrollableSize); // (Breaks) Vertical upwards dragging, moving downwards
+        final offset = Offset(0, -scrollableSize); // (Breaks) Vertical upwards dragging, moving downwards
         // final offset = Offset(-scrollableSize, 0.0); // (Works) Horizontal leftwards dragging, moving rightwards
         // final offset = Offset(scrollableSize, 0.0); // (Works) Horizontal rightwards dragging, moving leftwards
         // final offset = Offset(-scrollableSize, 0.0);
-        final offsetManual = Offset(180, 400);
         
         print('Checkpoint 3');
 
@@ -259,25 +133,37 @@ Future<num> scrollEachItem(
           print('Dragging: $currentNo');
           // Drag from top to bottom with a slight offset to ensure enough movement
           print('screenSize.center(Offset.zero): ${screenSize.center(Offset.zero)}');
-          // await tester.dragFrom(screenSize.center(Offset.zero), offset);
 
           await tester.pumpAndSettle();
+
+          print('Checkpoint W 0');
           
-          await tester.dragFrom(offsetManual, offset);
-
-          await tester.pumpAndSettle();
+          /*
+          UPDATE: The screen turns blank not because of any element.
+          It triggers if the page is scrollable vertically.
+          */
+          // await tester.timedDragFrom(
+          //   screenSize.center(Offset.zero),
+          //   offset,
+          //   const Duration(seconds: 1)
+          // );
+          await tester.dragFrom(screenSize.center(Offset.zero), offset);
 
           print('Checkpoint W 1');
 
-          await delayed();
+          // await delayed();
           
           print('Checkpoint W 2');
 
           await tester.pumpAndSettle(); // Wait for UI to rebuild after scroll
 
-          await delayed();
+          // await delayed();
           
           print('Checkpoint W 3');
+
+          await tester.pumpAndSettle();
+          
+          expect(find.textContaining('Pizza with Tomato Sauce'), findsAtLeastNWidgets(1));
 
           print('Dragging $currentNo completed, proceed to screenshot taking.');
 
@@ -328,7 +214,7 @@ Future<num> scrollEachItem(
         }
       }
       catch(err) {
-        print('Element not found. Skip.');
+        print('Element not found. err: $err');
       }
 
     }

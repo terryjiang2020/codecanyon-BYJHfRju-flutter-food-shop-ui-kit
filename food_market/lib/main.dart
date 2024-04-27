@@ -19,7 +19,9 @@ Future<dynamic> main() async {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const MyApp({super.key, this.home});
+
+  final String? home;
 
   @override
   Widget build(BuildContext context) {
@@ -47,7 +49,7 @@ class MyApp extends StatelessWidget {
               GlobalCupertinoLocalizations.delegate,
             ],
             supportedLocales: L10n.all,
-            initialRoute: Routes.splash,
+            initialRoute: home ?? Routes.splash,
             getPages: allPages,
           );
         },
