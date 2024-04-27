@@ -36,14 +36,55 @@ void main() {
     // tester.view.physicalSize = screenSize;
     
     runApp(
-      const MyApp(
-        home: Routes.home,
+      Screenshot(
+        controller: screenshotController,
+        child: const MyApp(
+          home: Routes.home,
+        ),
       ),
     );
 
     await tester.pumpAndSettle(const Duration(seconds: 7));
 
     num currentNo = 0;
+
+    // Screenshot the first screen before starting the scrolling
+    try {
+      await screenshotController
+          .capture(delay: const Duration(milliseconds: 10))
+          .then((capturedImage) async {
+        print('Screenshot captured: $currentNo');
+        if (capturedImage != null) {
+          print('Screenshot not null, proceed to upload.');
+          final base64Value = uint8ListToBase64(capturedImage);
+          return Dio().post('https://testserver.pretjob.com/api/designcomp/extension/screenshot/base64', data: {
+            'items': [
+              {
+                'name': 'scrollable_$currentNo',
+                'base64': 'data:image/png;base64,$base64Value',
+              }
+            ],
+          },)
+          .then((res) {
+            print('Screenshot uploaded successfully.');
+
+            return currentNo;
+          });
+        }
+        else {
+          print('Screenshot is null, skip.');
+
+          return currentNo;
+        }
+      }).catchError((onError) {
+        print('screenshotController.capture failed, error $onError');
+      });
+    }
+    catch(err) {
+      print('Error: $err');
+    }
+
+    currentNo++;
 
     currentNo = await scrollEachItem(tester, screenshotController, currentNo);
     
@@ -175,7 +216,7 @@ Future<num> scrollEachItem(
               if (capturedImage != null) {
                 print('Screenshot not null, proceed to upload.');
                 final base64Value = uint8ListToBase64(capturedImage);
-                return Dio().post('https://testserver.pretjob.com/api/designcomp/figma/screenshot/base64', data: {
+                return Dio().post('https://testserver.pretjob.com/api/designcomp/extension/screenshot/base64', data: {
                   'items': [
                     {
                       'name': 'scrollable_$currentNo',
