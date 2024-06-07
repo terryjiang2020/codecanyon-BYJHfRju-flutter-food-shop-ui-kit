@@ -22,6 +22,7 @@ class _SignUpUserAddressPageState extends State<SignUpUserAddressPage> {
     final theme = Theme.of(context);
     return Scaffold(
       body: SingleChildScrollView(
+        key: const PageStorageKey('sign_up_user_address_page'),
         child: Column(
           children: [
             buildMainSection(

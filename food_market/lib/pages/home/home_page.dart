@@ -114,6 +114,7 @@ class _HomePageState extends State<HomePage>
     final themeProv = Provider.of<ThemeProvider>(context);
     return Positioned.fill(
       child: SingleChildScrollView(
+        key: const PageStorageKey('home_page'),
         controller: _scrollViewController,
         physics: const ScrollPhysics(),
         child: Column(

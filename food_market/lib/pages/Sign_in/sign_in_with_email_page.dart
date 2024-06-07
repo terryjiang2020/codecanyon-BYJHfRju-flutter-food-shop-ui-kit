@@ -22,6 +22,7 @@ class _SignInWithEmailPageState extends State<SignInWithEmailPage> {
     final theme = Theme.of(context);
     return Scaffold(
       body: SingleChildScrollView(
+        key: const PageStorageKey('sign_in_with_email_page'),
         child: Column(
           children: [
             buildMainSection(

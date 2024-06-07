@@ -20,6 +20,7 @@ class ForgotPasswordPage extends StatelessWidget {
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(Const.margin),
+        key: const PageStorageKey('forgot_password_page'),
         child: Column(
           children: [
             Text(

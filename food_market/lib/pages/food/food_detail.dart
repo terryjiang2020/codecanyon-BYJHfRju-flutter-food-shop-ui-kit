@@ -324,6 +324,7 @@ class _FoodDetailPageState extends State<FoodDetailPage>
   Positioned buildMainSection(BuildContext context, {Widget? child}) {
     return Positioned.fill(
       child: SingleChildScrollView(
+        key: const PageStorageKey('main_section'),
         controller: _scrollViewController,
         physics: const ScrollPhysics(),
         child: Padding(

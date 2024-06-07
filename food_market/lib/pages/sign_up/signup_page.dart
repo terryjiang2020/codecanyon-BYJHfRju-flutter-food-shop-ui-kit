@@ -22,6 +22,7 @@ class _SignUpPageState extends State<SignUpPage> {
     final theme = Theme.of(context);
     return Scaffold(
       body: SingleChildScrollView(
+        key: const PageStorageKey('sign_up_page'),
         child: Column(
           children: [
             buildMainSection(

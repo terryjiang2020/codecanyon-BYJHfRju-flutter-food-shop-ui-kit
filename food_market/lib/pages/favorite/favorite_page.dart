@@ -91,8 +91,9 @@ class _FavoritePageState extends State<FavoritePage>
   }
 
   Positioned buildMainContent(ThemeData theme) {
-    return Positioned.fill(
+    final content = Positioned.fill(
       child: SingleChildScrollView(
+        key: const PageStorageKey('favorite_page'),
         controller: _scrollViewController,
         child: GridView.builder(
           itemCount: mockFavoriteList.length,
@@ -118,5 +119,7 @@ class _FavoritePageState extends State<FavoritePage>
         ),
       ),
     );
+
+    return content;
   }
 }

@@ -46,6 +46,7 @@ class _SettingPageState extends State<SettingPage> {
     return Scaffold(
       appBar: buildAppBar(theme),
       body: SingleChildScrollView(
+        key: const PageStorageKey('setting_page'),
         child: Column(
           children: [
             SizedBox(

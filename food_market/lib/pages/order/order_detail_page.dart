@@ -23,6 +23,7 @@ class OrderDetailPage extends StatelessWidget {
 
     return Scaffold(
       body: SingleChildScrollView(
+        key: const PageStorageKey('order_detail_page'),
         padding: const EdgeInsets.symmetric(horizontal: Const.margin),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

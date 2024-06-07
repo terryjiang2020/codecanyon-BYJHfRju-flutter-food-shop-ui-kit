@@ -100,6 +100,7 @@ class _OrderPageState extends State<OrderPage>
   Positioned buildMainContent(ThemeData theme) {
     return Positioned.fill(
       child: SingleChildScrollView(
+        key: const PageStorageKey('order_page'),
         controller: _scrollViewController,
         padding: const EdgeInsets.fromLTRB(
           Const.margin,

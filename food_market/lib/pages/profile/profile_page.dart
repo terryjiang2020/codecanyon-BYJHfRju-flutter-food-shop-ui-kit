@@ -18,6 +18,7 @@ class ProfilePage extends StatelessWidget {
     final themeProv = Provider.of<ThemeProvider>(context);
 
     return SingleChildScrollView(
+      key: const PageStorageKey('profile_page'),
       child: Column(
         children: [
           Container(
