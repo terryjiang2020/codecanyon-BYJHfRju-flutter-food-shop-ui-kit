@@ -3,27 +3,30 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
+// Replace these with your own Router and Page
 import 'package:food_market/helpers/routes.dart';
-import 'package:food_market/helpers/theme.dart';
-import 'package:food_market/l10n/l10n.dart';
 import 'package:food_market/main.dart';
-import 'package:food_market/pages/home/home_page.dart';
-import 'package:food_market/providers/locale_provider.dart';
-import 'package:food_market/providers/theme_provider.dart';
 import 'package:integration_test/integration_test.dart';
-import 'package:provider/provider.dart';
 import 'package:screenshot/screenshot.dart';
 
-// To trigger, run: flutter test test/order_test.dart
-
-// Advanced trigger test: flutter drive --driver test/integration_test.dart --target test/order_test.dart
+// Advanced trigger test: flutter drive --driver vetest/integration_test.dart --target vetest/test.dart
 
 // On iPhone: use the original resolution
 // On iPad: times the resolution by 2
-const screenSize = Size(750, 1334);
+const screenSize = Size(414, 896);
+
+const targetedItemIds = [340, 341, 342];
+
+const projectId = 84;
+
+const apiToken = '2957b7c0-2dc0-11ef-940e-f98a7ded80891718748882236'; // Use a valid API Token here
+
+final options = Options(
+  headers: {
+    'api-token': apiToken,
+  }
+);
 
 void main() {
 
@@ -39,14 +42,28 @@ void main() {
       Screenshot(
         controller: screenshotController,
         child: const MyApp(
+          // Replace this with your own page
           home: Routes.home,
         ),
       ),
     );
 
-    await tester.pumpAndSettle(const Duration(seconds: 7));
+    await tester.pumpAndSettle(const Duration(seconds: 2));
 
-    num currentNo = 0;
+    // Action STARTS
+
+    // If you have any action to trigger before scrolling, put it here.
+
+    // For example, if you want to click a button:
+    // await tester.tap(find.byKey(Key('my_button')));
+    // await tester.pumpAndSettle();
+
+    // Action ENDS
+
+    var currentNo = 0;
+    const deleteUrl = 'https://testserver.visualexact.com/api/designcomp/extension/screenshot/clear/$projectId';
+    const uploadUrl = 'https://testserver.visualexact.com/api/designcomp/extension/screenshot/base64';
+    const endUrl = 'https://testserver.visualexact.com/api/designcomp/project/loading/update/$projectId/3';
 
     // Screenshot the first screen before starting the scrolling
     try {
@@ -54,21 +71,33 @@ void main() {
           .capture(delay: const Duration(milliseconds: 10))
           .then((capturedImage) async {
         print('Screenshot captured: $currentNo');
+        print('Targeted item: ${targetedItemIds[currentNo]}');
+        var targetedItemId = targetedItemIds[currentNo];
         if (capturedImage != null) {
           print('Screenshot not null, proceed to upload.');
           final base64Value = uint8ListToBase64(capturedImage);
-          return Dio().post('https://testserver.pretjob.com/api/designcomp/extension/screenshot/base64', data: {
-            'items': [
-              {
-                'name': 'scrollable_$currentNo',
-                'base64': 'data:image/png;base64,$base64Value',
-              }
-            ],
-          },)
-          .then((res) {
-            print('Screenshot uploaded successfully.');
 
-            return currentNo;
+          return Dio().delete(deleteUrl, options: options)
+          .then((res) {
+            print('Screenshot deleted successfully.');
+
+            return Dio().post(uploadUrl, data: {
+              'items': [
+                {
+                  'name': 'scrollable_${currentNo}_${DateTime.now().millisecondsSinceEpoch}',
+                  'base64': 'data:image/png;base64,$base64Value',
+                  'campaignId': 1,
+                  'itemId': targetedItemIds[currentNo],
+                  'relevantAction': ''
+                }
+              ],
+            },
+            options: options)
+            .then((res) {
+              print('Screenshot uploaded successfully.');
+
+              return currentNo;
+            });
           });
         }
         else {
@@ -77,7 +106,7 @@ void main() {
           return currentNo;
         }
       }).catchError((onError) {
-        print('screenshotController.capture failed, error $onError');
+        print('screenshotController.capture failed 1, error $onError');
       });
     }
     catch(err) {
@@ -90,14 +119,16 @@ void main() {
     
     print('currentNo: $currentNo');
 
-    await delayed(milliseconds: 5000);
+    await Dio().get(endUrl, options: options);
+
+    await delayed(milliseconds: 500);
   });
 }
 
-Future<num> scrollEachItem(
+Future<int> scrollEachItem(
   WidgetTester tester,
   ScreenshotController screenshotController,
-  num currentNo,
+  int currentNo,
 ) async {
   print('scrollEachItem is triggered');
   // First approach: get a single scrollable widget and drag it
@@ -138,8 +169,6 @@ Future<num> scrollEachItem(
 
       print('Discovered scrollable type: ${scrollable.runtimeType.toString()}');
 
-      // print('find.byWidget(scrollable): ${find.byWidget(scrollable)}');
-
       final scrollableFinder = find.byWidget(scrollable);
 
       try {
@@ -155,15 +184,10 @@ Future<num> scrollEachItem(
         print('screenSize: $screenSize');
 
         final scrollableSize = screenSize.height;
-        // const scrollableSize = 100.0;
 
         print('Checkpoint 2');
 
-        // final offset = Offset(0.0, scrollableSize); // (Works) Vertical downwards dragging, moving upwards
         final offset = Offset(0, -scrollableSize); // (Breaks) Vertical upwards dragging, moving downwards
-        // final offset = Offset(-scrollableSize, 0.0); // (Works) Horizontal leftwards dragging, moving rightwards
-        // final offset = Offset(scrollableSize, 0.0); // (Works) Horizontal rightwards dragging, moving leftwards
-        // final offset = Offset(-scrollableSize, 0.0);
         
         print('Checkpoint 3');
 
@@ -183,22 +207,13 @@ Future<num> scrollEachItem(
           UPDATE: The screen turns blank not because of any element.
           It triggers if the page is scrollable vertically.
           */
-          // await tester.timedDragFrom(
-          //   screenSize.center(Offset.zero),
-          //   offset,
-          //   const Duration(seconds: 1)
-          // );
           await tester.dragFrom(screenSize.center(Offset.zero), offset);
 
           print('Checkpoint W 1');
-
-          // await delayed();
           
           print('Checkpoint W 2');
 
           await tester.pumpAndSettle(); // Wait for UI to rebuild after scroll
-
-          // await delayed();
           
           print('Checkpoint W 3');
 
@@ -209,35 +224,52 @@ Future<num> scrollEachItem(
           print('Dragging $currentNo completed, proceed to screenshot taking.');
 
           try {
-            await screenshotController
-                .capture(delay: const Duration(milliseconds: 10))
-                .then((capturedImage) async {
-              print('Screenshot captured: $currentNo');
-              if (capturedImage != null) {
-                print('Screenshot not null, proceed to upload.');
-                final base64Value = uint8ListToBase64(capturedImage);
-                return Dio().post('https://testserver.pretjob.com/api/designcomp/extension/screenshot/base64', data: {
-                  'items': [
-                    {
-                      'name': 'scrollable_$currentNo',
-                      'base64': 'data:image/png;base64,$base64Value',
-                    }
-                  ],
-                },)
-                .then((res) {
-                  print('Screenshot uploaded successfully.');
+            if (targetedItemIds.length > currentNo) {
+              print('Screenshot the current item: $currentNo');
+              await screenshotController
+                  .capture(delay: const Duration(milliseconds: 10))
+                  .then((capturedImage) async {
+                print('Current NO: $currentNo');
+                print('targetedItemIds.length: ${targetedItemIds.length}');
+                if (capturedImage != null) {
+                  print('Screenshot not null, proceed to upload.');
+                  final base64Value = uint8ListToBase64(capturedImage);
+                  final key = scrollable.key;
+                  final keyToString = key != null ? key.toString().replaceFirst('[String <', '').replaceFirst('>]', '') : 'null';
+                  print('keyToString: $keyToString');
+                  return Dio().post('https://testserver.visualexact.com/api/designcomp/extension/screenshot/base64', data: {
+                    'items': [
+                      {
+                        'name': 'scrollable_${currentNo}_${DateTime.now().millisecondsSinceEpoch}',
+                        'base64': 'data:image/png;base64,$base64Value',
+                        'campaignId': 1,
+                        'itemId': targetedItemIds[currentNo],
+                        'relevantAction': 'Scroll down at the center of Widget (key: $keyToString) (${screenSize.center(Offset.zero)}) for $offset pixels'
+                      }
+                    ],
+                  },
+                  options: options)
+                  .then((res) {
+                    print('Screenshot uploaded successfully.');
+
+                    return currentNo;
+                  });
+                }
+                else {
+                  print('Screenshot is null, skip.');
 
                   return currentNo;
-                });
-              }
-              else {
-                print('Screenshot is null, skip.');
-
-                return currentNo;
-              }
-            }).catchError((onError) {
-              print('screenshotController.capture failed, error $onError');
-            });
+                }
+              }).catchError((onError) {
+                print('screenshotController.capture failed 2, error $onError');
+              });
+            }
+            else {
+              print('currentNo has gone beyond the length, skip.');
+              print('Current NO: $currentNo');
+              print('targetedItemIds.length: ${targetedItemIds.length}');
+              break;
+            }
           }
           catch(err) {
             print('Error: $err');
