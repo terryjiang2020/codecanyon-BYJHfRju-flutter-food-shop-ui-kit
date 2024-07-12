@@ -14,11 +14,11 @@ import 'package:screenshot/screenshot.dart';
 
 // On iPhone: use the original resolution
 // On iPad: times the resolution by 2
-const screenSize = Size(414, 896);
+const screenSize = Size(390, 844);
 
-const targetedItemIds = [340, 341, 342];
+const targetedItemIds = [665, 666];
 
-const projectId = 84;
+const projectId = 101;
 
 const apiToken = '2957b7c0-2dc0-11ef-940e-f98a7ded80891718748882236'; // Use a valid API Token here
 
@@ -88,7 +88,8 @@ void main() {
                   'base64': 'data:image/png;base64,$base64Value',
                   'campaignId': 1,
                   'itemId': targetedItemIds[currentNo],
-                  'relevantAction': ''
+                  'relevantAction': '',
+                  'projectId': projectId
                 }
               ],
             },
