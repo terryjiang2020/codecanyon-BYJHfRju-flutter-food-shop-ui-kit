@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -27,19 +28,137 @@ class MyApp extends StatelessWidget {
   final String? home;
   final screenshotController = ScreenshotController();
 
-  void pressHandler() {
+  Future<void> pressHandler(Widget? child) async {
     print('Button pressed, updated 3');
-    screenshotController
-    .capture(delay: const Duration(milliseconds: 100))
-    .then((image) {
-      if (image != null) {
-        print('Capture Done');
-      } else {
-        print('Capture Failed');
+
+    if (child == null) {
+      print('Child is null. Abort.');
+      
+      return;
+    }
+
+    try {
+      // Initial screenshot
+      await screenshotController
+      .capture(delay: const Duration(milliseconds: 100))
+      .then((image) {
+        if (image != null) {
+          print('Capture Done');
+        } else {
+          print('Capture Failed');
+        }
+      }).catchError((onError) {
+        print('Capture Error: $onError');
+      });
+
+      // Try to scroll down
+      await scrollEachItem(child, screenshotController);
+    }
+    catch(err) {
+      print('Error: $err');
+    }
+  }
+
+  bool isScrollable(dynamic widget) {
+    return 
+      // Check if widget is scrollable
+      (
+        widget is ListView &&
+        // Check if widget has a scroll controller
+        widget.controller != null &&
+        // Check if widget has a max scroll extent
+        widget.controller!.position.maxScrollExtent as num > 0 &&
+        // Check if widget is not at the bottom
+        widget.controller!.offset as num < widget.controller!.position.maxScrollExtent
+      ) ||
+      (
+        widget is ScrollView &&
+        // Check if widget has a scroll controller
+        widget.controller != null &&
+        // Check if widget has a max scroll extent
+        widget.controller!.position.maxScrollExtent as num > 0 &&
+        // Check if widget is not at the bottom
+        widget.controller!.offset as num < widget.controller!.position.maxScrollExtent
+      ) ||
+      (
+        widget is SingleChildScrollView &&
+        // Check if widget has a scroll controller
+        widget.controller != null &&
+        // Check if widget has a max scroll extent
+        widget.controller!.position.maxScrollExtent as num > 0 &&
+        // Check if widget is not at the bottom
+        widget.controller!.offset as num < widget.controller!.position.maxScrollExtent
+      ) ||
+      (
+        widget is CustomScrollView &&
+        // Check if widget has a scroll controller
+        widget.controller != null &&
+        // Check if widget has a max scroll extent
+        widget.controller!.position.maxScrollExtent as num > 0 &&
+        // Check if widget is not at the bottom
+        widget.controller!.offset as num < widget.controller!.position.maxScrollExtent
+      ) ||
+      (
+        widget is NestedScrollView &&
+        // Check if widget has a scroll controller
+        widget.controller != null &&
+        // Check if widget has a max scroll extent
+        widget.controller!.position.maxScrollExtent as num > 0 &&
+        // Check if widget is not at the bottom
+        widget.controller!.offset as num < widget.controller!.position.maxScrollExtent
+      );
+  }
+
+  Future<int> scrollEachItem(
+    dynamic child,
+    ScreenshotController screenshotController,
+  ) async {
+
+    print('scrollEachItem is triggered');
+    
+    // Check if any scrollable widget exists
+    // If not, return 0
+
+    if (
+      isScrollable(child) == true &&
+      child.key != null &&
+      child.key.currentContext != null &&
+      child.key.currentContext!.findRenderObject() != null &&
+      child.key.currentContext!.findRenderObject().size != null
+    ) {
+      print('Scrollable widget found');
+
+      while (isScrollable(child) == true) {
+        // Calculate the widget's height
+        final num widgetHeight = (child.key.currentContext!.findRenderObject() as RenderBox).size.height;
+
+        final num remainingScrollingHeight = (child.controller!.position.maxScrollExtent as num) - (child.position.pixels as num);
+
+        final num maxScrollableExtend = min(
+          remainingScrollingHeight,
+          widgetHeight
+        );
+
+        // Scroll down
+        child.controller?.animateTo(
+          maxScrollableExtend,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOut,
+        );
       }
-    }).catchError((onError) {
-      print('Capture Error: $onError');
-    });
+    }
+
+    final scrollableWidgets = <dynamic>[];
+
+    if (child is Column) {
+      for (final widget in child.children) {
+        if (isScrollable(widget) == true) {
+          scrollableWidgets.add(widget);
+        }
+      }
+    }
+    
+    return 0;
   }
   
   @override
@@ -80,7 +199,7 @@ class MyApp extends StatelessWidget {
                   // onPressed: () {
                   //   pressHandler();
                   // },
-                  onPressed: ()=>Timer(Duration(milliseconds: 10),pressHandler),
+                  onPressed: ()=>Timer(Duration(milliseconds: 10), () => pressHandler(child)),
                   child: const Icon(Icons.add),
                 ),
                 floatingActionButtonLocation: FloatingActionButtonLocation.miniEndFloat,
