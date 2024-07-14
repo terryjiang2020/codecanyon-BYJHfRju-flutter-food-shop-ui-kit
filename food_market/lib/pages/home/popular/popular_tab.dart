@@ -15,6 +15,7 @@ class PopularTab extends StatelessWidget {
           width: double.infinity,
           height: 270,
           child: ListView.builder(
+            key: GlobalKey(),
             itemCount: mockFoodList.length,
             scrollDirection: Axis.horizontal,
             physics: const BouncingScrollPhysics(),

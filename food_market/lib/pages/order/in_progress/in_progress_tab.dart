@@ -32,6 +32,7 @@ class InProgressTab extends StatelessWidget {
             ),
           )
         : ListView.builder(
+            key: GlobalKey(),
             itemCount: mockOrderList.length,
             shrinkWrap: true,
             itemBuilder: (context, index) {

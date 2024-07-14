@@ -192,6 +192,7 @@ class _HomePageState extends State<HomePage>
               ),
             ),
             ListView.builder(
+              key: GlobalKey(),
               itemCount: mockFoodList.length,
               shrinkWrap: true,
               padding: const EdgeInsets.symmetric(

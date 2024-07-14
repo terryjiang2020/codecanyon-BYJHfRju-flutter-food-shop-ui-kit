@@ -32,6 +32,7 @@ class PastOrderTab extends StatelessWidget {
             ),
           )
         : ListView.builder(
+            key: GlobalKey(),
             itemCount: mockPastOrderList.length,
             shrinkWrap: true,
             reverse: true,
