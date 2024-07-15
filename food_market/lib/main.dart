@@ -22,13 +22,51 @@ Future<dynamic> main() async {
   runApp(MyApp());
 }
 
+class MyNavigatorObserver extends NavigatorObserver {
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    super.didPush(route, previousRoute);
+    _checkForScrollableWidgets();
+  }
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    super.didPop(route, previousRoute);
+    _checkForScrollableWidgets();
+  }
+
+  void _checkForScrollableWidgets() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Obtain the current BuildContext using the Navigator's context
+      final context = navigator?.context;
+      if (context != null) {
+        bool hasScrollableWidget = _findScrollableWidget(context);
+        print(hasScrollableWidget
+            ? 'Scrollable widget is present!'
+            : 'No scrollable widget found!');
+      }
+    });
+  }
+
+  bool _findScrollableWidget(BuildContext context) {
+    // Use Scrollable.maybeOf() to find if a scrollable widget is present
+    print('_findScrollableWidget is triggered');
+    try {
+      return Scrollable.maybeOf(context) != null;
+    } on Exception catch (_) {
+      print('_findScrollableWidget error: $_');
+      return false;
+    }
+  }
+}
+
 class MyApp extends StatelessWidget {
   MyApp({super.key, this.home});
 
   final String? home;
   final screenshotController = ScreenshotController();
 
-  Future<void> pressHandler(Widget? child) async {
+  Future<void> pressHandler(Widget? child, BuildContext context) async {
     print('Button pressed, updated 3');
 
     if (child == null) {
@@ -53,6 +91,20 @@ class MyApp extends StatelessWidget {
 
       // Try to scroll down
       await scrollEachItem(child, screenshotController);
+    }
+    catch(err) {
+      print('Error: $err');
+    }
+
+    try {
+      final hasScrollable = _findScrollableWidget(context);
+
+      if (hasScrollable) {
+        print('It has scrollable!');
+      }
+      else {
+        print('It has no scrollable!');
+      }
     }
     catch(err) {
       print('Error: $err');
@@ -161,6 +213,17 @@ class MyApp extends StatelessWidget {
     return 0;
   }
   
+  bool _findScrollableWidget(BuildContext context) {
+    // Use Scrollable.of() to find if a scrollable widget is present
+    print('_findScrollableWidget is triggered');
+    try {
+      return Scrollable.maybeOf(context) != null;
+    } on Exception catch (_) {
+      print('_findScrollableWidget error: $_');
+      return false;
+    }
+  }
+  
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
@@ -171,6 +234,7 @@ class MyApp extends StatelessWidget {
       child: Consumer2<ThemeProvider, LocaleProvider>(
         builder: (context, theme, locale, child) {
           return GetMaterialApp(
+            navigatorObservers: [MyNavigatorObserver()],
             title: 'Food Market',
             debugShowCheckedModeBanner: false,
             defaultTransition: Transition.rightToLeftWithFade,
@@ -199,7 +263,7 @@ class MyApp extends StatelessWidget {
                   // onPressed: () {
                   //   pressHandler();
                   // },
-                  onPressed: ()=>Timer(Duration(milliseconds: 10), () => pressHandler(child)),
+                  onPressed: ()=>Timer(Duration(milliseconds: 10), () => pressHandler(child, context)),
                   child: const Icon(Icons.add),
                 ),
                 floatingActionButtonLocation: FloatingActionButtonLocation.miniEndFloat,
